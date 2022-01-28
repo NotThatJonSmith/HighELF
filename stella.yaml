@@ -1,0 +1,12 @@
+name: HighELF
+apps: []
+build-static-lib: true
+build-shared-lib: true
+dependencies: {}
+private-header-paths:
+    - src/include
+public-header-paths:
+    - include/
+source-globs:
+    - src/*
+test-globs: []
