@@ -34,7 +34,7 @@ protected:
 
     std::ifstream inputStream;
     Endianness fileEndianness;
-    
+
 private:
 
     Endianness hostEndianness;
@@ -42,7 +42,7 @@ private:
 
     template<typename MemType, typename StreamType>
     void getEndianCorrectedChunk(MemType* memBuf) {
-    
+
         if (sizeof(StreamType) > 1 && fileEndianness == Endianness::Unknown) {
             // TODO complain that we're pulling >1 byte before knowing endian
         }
@@ -52,7 +52,7 @@ private:
         // TODO check file status every single time
 
         // Convert stream endianness if it's different
-        if (hostEndianness != fileEndianness) {
+        if (sizeof(StreamType) > 1 && hostEndianness != fileEndianness) {
             streamBuf = swapEndianness<StreamType>(streamBuf);
         }
 
@@ -88,7 +88,7 @@ private:
             // TODO this assumes no schroedinger's types
             getEndianCorrectedChunk<EltType, EltType>(std::get<I>(tup));
         }
-        
+
         if constexpr (I >= sizeof...(Ts)) {
             return tup;
         } else {

@@ -57,6 +57,10 @@ void ElfFile::Load(std::string filename) {
         return;
     }
 
+    if (elfIdentification.ei_data == 1) {
+        fileEndianness = Endianness::Little;
+    }
+    
     if (elfIdentification.ei_data == 2) {
         fileEndianness = Endianness::Big;
     }
