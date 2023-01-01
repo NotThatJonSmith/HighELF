@@ -31,11 +31,31 @@ public:
         uint64_t size;
     };
 
-    struct Node {
-        
+    struct fdt_prop_data {
+        uint32_t len;
+        uint32_t nameoff;
     };
 
-    std::vector<fdt_reserve_entry> memoryReservationBlocks;
+    enum class Status {
+        Unloaded, BadFile, BadHeaderMagic, Loaded
+    };
+
+    struct Prop {
+        std::string name = "";
+        std::vector<char> bytes;
+    };
+
+    struct Node {
+        std::string name = "";
+        std::vector<Prop> props;
+        std::vector<Node> child_nodes;
+    };
+
+    static constexpr uint32_t TOK_FDT_BEGIN_NODE = 0x00000001;
+    static constexpr uint32_t TOK_FDT_END_NODE = 0x00000002;
+    static constexpr uint32_t TOK_FDT_PROP = 0x00000003;
+    static constexpr uint32_t TOK_FDT_NOP = 0x00000004;
+    static constexpr uint32_t TOK_FDT_END = 0x00000009;
 
 public:
 
@@ -43,6 +63,16 @@ public:
     DTBFile(std::string filename);
     virtual void Load(std::string filename) override;
 
+    Status status = Status::Unloaded;
+    fdt_header header;
+
+    Node root;
+    std::vector<fdt_reserve_entry> memoryReservationBlocks;
+
+private:
+
+    Node getNode();
+    Prop getProp();
 };
 
 } // namespace HighELF

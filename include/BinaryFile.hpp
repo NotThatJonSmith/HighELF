@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include <string>
 #include <fstream>
 #include <stdint.h>
@@ -29,6 +31,10 @@ public:
     void getWord(uint32_t* word);
     void getWord(uint64_t* doubleWord);
     void getDoubleWord(uint64_t* doubleWord);
+
+    std::string getNullTerminatedString();
+    std::string getNullTerminatedString(unsigned int streamOffset);
+    void alignFilePointer(unsigned int alignment);
 
 protected:
 
@@ -62,38 +68,26 @@ private:
 
     template<typename T>
     T swapEndianness(T input) {
-        T result = 0;
-        for (unsigned int byteOffset = 0; byteOffset < sizeof(input)/2; byteOffset++) {
-            unsigned int loshamt = 8*(sizeof(input)-byteOffset);
-            unsigned int hishamt = 8*(sizeof(input));
-            result |= (input >> hishamt) & (0xff << loshamt);
-            result |= (input >> loshamt) & (0xff << hishamt);
-        }
-        return result;
-    }
 
-    template<typename T>
-    void getStruct(T* buf) {
-        // TODO template metaprogramming way of doing this?
-        // Convert to tuple, getTuple, convert to struct, return...
-    }
+        union ByteOverlay {
+            T object;
+            char bytes[sizeof(T)];
+        };
+    
+        ByteOverlay inputBytes;
+        inputBytes.object = input;
 
-    template<size_t I = 0, class... Ts>
-    std::tuple<Ts...> getTuple(std::tuple<Ts...> tup) {
+        ByteOverlay outputBytes;
+        outputBytes.object = 0;
 
-        using EltType = std::tuple_element_t<I, std::tuple<Ts...>>;
-        if constexpr (std::is_class<EltType>::value) {
-            getStruct<EltType>(std::get<I>(tup));
-        } else {
-            // TODO this assumes no schroedinger's types
-            getEndianCorrectedChunk<EltType, EltType>(std::get<I>(tup));
+        for (unsigned int i = 0; i < sizeof(T); i++) {
+            outputBytes.bytes[i] = inputBytes.bytes[sizeof(T)-i-1];
         }
 
-        if constexpr (I >= sizeof...(Ts)) {
-            return tup;
-        } else {
-            return getTuple<I+1, Ts...>(tup);
-        }
+        // std::cout << "Swap: " << std::hex << inputBytes.object << " -> "
+        //           << outputBytes.object << std::endl;
+
+        return outputBytes.object;
     }
 };
 

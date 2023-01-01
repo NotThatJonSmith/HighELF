@@ -47,6 +47,34 @@ void BinaryFile::getDoubleWord(uint64_t* buf) {
     getEndianCorrectedChunk<uint64_t, uint64_t>(buf);
 }
 
+std::string BinaryFile::getNullTerminatedString() {
+    std::string result;
+    char c;
+    getByte((uint8_t*)&c);
+    while (c != 0) {
+        result += c;
+        getByte((uint8_t*)&c);
+    }
+    return result;
+}
+
+std::string BinaryFile::getNullTerminatedString(unsigned int streamOffset) {
+    uint32_t bookmark = inputStream.tellg();
+    inputStream.seekg(streamOffset, std::ios::beg);
+    std::string result = getNullTerminatedString();
+    inputStream.seekg(bookmark, std::ios::beg);
+    return result;
+}
+
+void BinaryFile::alignFilePointer(unsigned int alignment) {
+    unsigned int modulus = inputStream.tellg() % alignment;
+    uint8_t paddingByte;
+    while (modulus) {
+        getByte(&paddingByte);
+        modulus = (modulus + 1) % alignment;
+    }
+}
+
 BinaryFile::Endianness BinaryFile::detectHostEndianness() {
 
     union {
@@ -60,6 +88,5 @@ BinaryFile::Endianness BinaryFile::detectHostEndianness() {
 
     return BinaryFile::Endianness::Little;
 }
-
 
 } // namespace HighELF
